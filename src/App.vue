@@ -1,0 +1,383 @@
+<template>
+  <div >
+    <nav class="navbar navbar-light bg-light">
+      <div class="container-fluid">
+        <span class="navbar-brand mb-0 h1">Consumos</span>
+        <button v-if="!isSignActive" type="submit" class="btn btn-primary" @click.prevent="validarYFirmar">Grabar</button>
+      </div>
+    </nav>
+
+    <div v-if="step === 1" class="container" >
+      <form>
+        <div class="mb-3">
+          <label for="almacen" class="form-label">Almacen: {{almacen}}</label>
+          <select id="inputState" class="form-control" v-model="almacen">
+            <option value="0" selected>Choose...</option>
+            <option v-for="alma in almacenes" :key="alma.LGORT" :value="alma.LGORT">
+              {{alma.LGORT}} - {{alma.LGOBE}}
+            </option>
+          </select>
+          <!-- <input v-model="almacen" type="text" class="form-control form-control-sm" id="almacen" aria-describedby="almacenHelp"> -->
+        </div>
+        <div class="mb-3">
+          <label for="destinatario" class="form-label">Destinatario</label>
+          <input v-model="destinatario" type="text" class="form-control form-control-sm" id="destinatario" aria-describedby="destinatarioHelp">
+        </div>
+        <div class="mb-3">
+          <label for="ceco" class="form-label">CeCo</label>
+          <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp">
+        </div>
+        <div class="mb-3">
+          <label for="orden" class="form-label">Orden</label>
+          <input v-model="orden" type="text" class="form-control form-control-sm" id="orden" aria-describedby="ordenHelp">
+        </div>
+        <div class="mb-3">
+          <div class="form-check form-check-inline">
+            <input v-model="consumo" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="C" checked>
+            <label class="form-check-label" for="inlineRadio1">Consumo</label>
+          </div>
+          <div class="form-check form-check-inline">
+            <input v-model="consumo" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="A">
+            <label class="form-check-label" for="inlineRadio2">Anulación</label>
+          </div>
+          
+        </div>
+      </form>
+    </div>
+
+    <div v-if="step === 2" class="container" >
+      <!-- <Lista-mat /> -->
+      <label for="material" class="form-label">Scan:</label>
+      <input  v-model="newMat" autofocus type="text" class="form-control" 
+              ref="nuevoMat"
+              id="material" @keyup.enter="addNewMat">
+      <ul class="list-group">
+        <li class="list-group-item" 
+            v-for="(mat, index) in materiales" :key="mat.cod">
+          <div class="d-flex w-100 justify-content-between">
+            {{ mat.id }} - {{ mat.name }}
+            <span class="badge bg-primary rounded-pill">{{ mat.cant }} {{ mat.um }}</span>
+          </div>
+            
+          <i @click="removeMat(index)" class="far fa-trash-alt"></i>
+          <!-- <button @click="removeMat(index)" type="button" class="btn btn-outline-danger btn-sm">X</button> -->
+
+        </li>
+      </ul>
+      
+    </div>
+
+    <div v-if="step === 3"  class="signature-pad" >
+      <div ref="divSignature" id="signature-body" class="signature-body">
+        <VueSignature ref="signaturePad" :h="'400px'" :w="'359px'" class="border"/>
+      </div>
+      <div class="signature-footer">
+        <button class="btn btn-primary" @click="clear">Clear</button>
+        <button class="btn btn-primary" @click="savePng">save png</button>
+        <button class="btn btn-primary" @click="cancel">Cancelar</button>
+        <button type="submit" class="btn btn-primary" @click.prevent="crearMovimiento">Aceptar</button>
+      </div>
+    </div>
+  </div>
+</template>
+
+<script>
+import { ref } from 'vue'; 
+import VueSignature from 'vue-signature';
+// import DKToast from 'vue-dk-toast'
+import { useToast } from "vue-toastification";
+import axios from 'axios';
+
+
+export default {
+  name: 'App',
+  // components: { Campos, ListaMat },
+  components: { VueSignature },
+
+  setup() {
+    const almacen = ref(); 
+    const almacenes = ref([]); 
+    const destinatario = ref(""); 
+    const ceco = ref(""); 
+    const orden = ref(""); 
+    const consumo = ref(""); 
+    const materiales = ref([]);
+    const newMat = ref('');
+    // const isSignActive = ref(false); 
+    const nuevoMat = ref(null);
+    const signaturePad = ref(null);
+    const divSignature = ref(null);
+    const toast = useToast();
+    const host = ref("http://10.10.0.100:8080")
+    // const host = ref("https://sapdes:44300")
+    const step = ref(); 
+
+    const fetchAllAlmacenes = () => {
+      // // completar lista almacenes 
+
+      // funciona para hacer GET: 
+      const options = {
+        // headers: {'X-Requested-With': 'XMLHttpRequest'}
+        // ,method: "POST"
+        // headers: {'X-CSRF-Token': 'Fetch', 'X-Requested-With': 'XMLHttpRequest'}
+        // , xsrfCookieName: 'csrftoken'
+        // , xsrfHeaderName: 'x-csrftoken'
+        // , withCredentials: true
+        // auth: {
+        //   username: 'tecsense',
+        //   password: 'presmia.022'
+        // }
+        // params: {
+        //   id : '1020'
+        // }
+      };
+      return axios.get( host.value + '/test/lgort?sap-client=300', options )
+      // return axios.post( 'http://192.168.1.101:8000/test/lgort?sap-client=300', {name: 'hola'}, options )
+        .then(response => {
+          almacenes.value = response.data;
+          // response.headers response.config
+          // console.log(response.headers['x-csrf-token']);
+        })
+        .catch(function (error) {
+          console.log(error); 
+        });
+
+    }
+
+    function resizeCanvas() {
+      // var wrapper = document.getElementById("signature-pad");
+      var canvas = document.getElementById("canvas"); // wrapper.querySelector("canvas");
+      var ratio =  Math.max(window.devicePixelRatio || 1, 1);
+      // // console.log(divSignature);
+      // console.log(canvas);
+      if (canvas) {
+        canvas.width = canvas.offsetWidth * ratio;
+        canvas.height = canvas.offsetHeight * ratio;
+        canvas.getContext("2d").scale(ratio, ratio);
+        console.log(canvas);
+      }
+
+      // if (signaturePad.value) {
+      //   signaturePad.value.width = signaturePad.value.offsetWidth * ratio;
+      //   signaturePad.value.height = signaturePad.value.offsetHeight * ratio;
+      //   signaturePad.value.getContext("2d").scale(ratio, ratio);
+      //   clear();
+      // }
+
+      clear();
+    }
+    window.onresize = resizeCanvas;
+
+    // toast("I'm a toast!");
+    // toast("Default toast");
+    // toast.info("Info toast");
+    // toast.success("Success toast");
+    // toast.error("Error toast");
+    // toast.warning("Warning toast");
+
+    function clear() {
+      if (signaturePad.value) {
+        signaturePad.value.clear();
+      }
+    }
+
+    function savePng() {
+      let nuevoContenido = signaturePad.value.save('image/jpeg'); 
+      //     console.log(nuevoContenido);
+      // data_uri = "data:image/png;base64,iVBORw0K..."
+      let encoded_image = nuevoContenido.split(",")[1];
+      // console.log(encoded_image);
+      // let decoded_image = atob(encoded_image);
+      // let decoded_image = Base64.decode64(encoded_image);
+      // console.log(decoded_image);
+      download("hello.jpeg", encoded_image);
+    }
+
+    function download(filename, text) {
+        var element = document.createElement('a');
+        element.setAttribute('href', 'data:image/png;base64,' + encodeURIComponent(text));
+        // element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+        element.setAttribute('download', filename);
+
+        element.style.display = 'none';
+        document.body.appendChild(element);
+
+        element.click();
+
+        document.body.removeChild(element);
+    }
+
+    function validarYFirmar() {
+      // validaciones 
+        // campos completos, al menos 1 material
+      if( !almacen.value || almacen.value == 0 || !destinatario.value || (!ceco.value && !orden.value) || materiales.value.length == 0) {
+        // error campos incompletos 
+        toast.error("Completar campos");
+
+      } else {
+        step.value = 3;
+
+      }
+      
+      // // resizeCanvas();
+    }
+
+    function crearMovimiento() {
+      // isSignActive.value = !isSignActive.value; // invierte valor 
+      
+      if (!signaturePad.value.isEmpty()) {
+
+        let token = ''; 
+        var jpeg = signaturePad.value.save('image/jpeg');
+        let codMovimiento = 0;
+
+        // hacer un GET para recuperar token y asi poder llamar a POST 
+        const options = {
+          headers: {'X-CSRF-Token': 'Fetch'} //, 'X-Requested-With': 'XMLHttpRequest'}
+          , withCredentials: true
+          , auth: {
+            username: 'tecsense',
+            password: 'presmia.022'
+          }
+        };
+      
+        axios.get( host.value + '/test/hello?sap-client=300', options)
+        .then(response => {
+          // obtener token 
+          // console.log(response);
+          token = response.headers['x-csrf-token'];
+          console.log('token: ' + token);
+          if (ceco.value) {
+            if (consumo.value === 'C') {
+              codMovimiento = 201;
+            } else {
+              codMovimiento = 202;
+            }
+          } else if (ceco.value) {
+            if (consumo.value === 'C') {
+              codMovimiento = 261;
+            } else {
+              codMovimiento = 262;
+            }
+          }
+
+          const data = {
+            "almacen": almacen.value, 
+            "destinatario": destinatario.value, 
+            "ceco": ceco.value,
+            "orden": orden.value, 
+            "movimiento": codMovimiento, 
+            "productos" : materiales.value,
+            "firma" : jpeg
+          }; 
+          const headPost = {
+            headers: { 'x-csrf-token': token } //, 'X-Requested-With': 'XMLHttpRequest' }
+            // , withCredentials: true
+            // , 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'  //'application/json'
+            // , 'Access-Control-Allow-Origin': 'http://10.10.0.100:8080'
+            // , 'sec-fetch-mode': 'no-cors'
+            // , auth: {
+            //   username: 'tecsense',
+            //   password: 'presmia.022'
+            // }
+          };
+
+          axios.post( host.value + '/test/hello?sap-client=300', data, headPost )
+            .then(response => {
+              console.log(response); 
+            })
+            .catch(function (error) {
+              console.log('POST error: '); 
+              console.log(error); 
+              console.log(error.response); 
+              console.log(error.request); 
+              console.log(error.message); 
+
+            }); 
+
+        })
+        .catch(function (error) {
+              console.log('error get: ' + error); 
+        });
+
+
+        step.value = 1; //'visible';      
+        toast.success("Movimiento creado");  
+      }
+
+      // var png = signaturePad.value.save();
+      // 
+      // var svg = signaturePad.value.save('image/svg+xml');
+      // console.log(png);
+      // console.log(jpeg);
+      // console.log(svg);
+    }
+
+    function cancel() {
+      step.value = 2;
+    }
+
+    function addNewMat() {
+      // llamar a API para obtener 
+
+      // si el material ya existe en la lista => sumamos 1 
+      const itemIndex = materiales.value.findIndex(item => item.id === newMat.value);
+      // const mat = materiales.value.find(item => item.id === newMat.value); 
+      // const itemIndex = materiales.value.indexOf(mat);
+
+      if (itemIndex >= 0) {
+        materiales.value[itemIndex].cant += 1; 
+      } else {
+
+        const options = {
+          params: {
+            matnr : newMat.value
+          }
+        };
+        axios.get( host.value + '/test/matnr?sap-client=300', options )
+          .then(response => {
+            let material = response.data;
+            // response.headers response.config
+            console.log(response);
+            if (material.MATNR) {
+              materiales.value.push({
+                id: material.MATNR, 
+                name: material.MAKTX, 
+                cant: 1,
+                um: material.MEINS
+              });
+            } else {
+              toast.error("Material no encontrado");
+            }
+          })
+          .catch(function (error) {
+            console.log(error); 
+            toast.error("error al buscar material");
+          });        
+        
+      }
+
+      newMat.value = '';
+    }
+
+    function removeMat(index) {
+      materiales.value.splice(index, 1);
+      nuevoMat.value.focus();
+      
+    }
+
+    return { 
+      almacen, almacenes, destinatario, ceco, orden, consumo, crearMovimiento,
+      materiales, newMat, addNewMat, removeMat, validarYFirmar, nuevoMat,
+      clear, signaturePad, savePng, cancel, divSignature, toast,
+      fetchAllAlmacenes, step 
+    }
+  },
+   
+  created() {
+    this.fetchAllAlmacenes();
+    this.step = 1;
+  }
+  
+}
+</script>
