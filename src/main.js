@@ -5,7 +5,7 @@ import App from './App.vue';
 import Toast from "vue-toastification";
 // Import the CSS or use your own!
 import "vue-toastification/dist/index.css";
-// import cors from 'cors'; 
+
 
 const app = createApp(App)
 const options = {
@@ -15,6 +15,4 @@ const options = {
 app.use(Toast, options);
 // app.use(VueSignaturePad)
 // app.use(VueSignature)
-// app.use(DKToast);
-// app.use(cors)
 app.mount('#app');
