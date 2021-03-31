@@ -35,11 +35,11 @@
             </div>
             <div class="mb-3">
               <div class="form-check form-check-inline">
-                <input v-model="consumo" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" value="C" checked>
+                <input v-model="consumo" v-bind:value="'C'" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio1" checked>
                 <label class="form-check-label" for="inlineRadio1">Consumo</label>
               </div>
               <div class="form-check form-check-inline">
-                <input v-model="consumo" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" value="A">
+                <input v-model="consumo" v-bind:value="'A'" class="form-check-input" type="radio" name="inlineRadioOptions" id="inlineRadio2" >
                 <label class="form-check-label" for="inlineRadio2">Anulación</label>
               </div>
               
@@ -126,7 +126,8 @@ export default {
     const signaturePad = ref(null);
     const divSignature = ref(null);
     const toast = useToast();
-    const host = ref("http://10.10.0.104:8080")
+    const host = ref("http://192.168.1.101:8000")
+    // const host = ref("http://10.10.0.102:8080")
     // const host = ref("https://sapdes:44300")
     const step = ref(); 
 
@@ -151,7 +152,6 @@ export default {
         // }
       };
       return axios.get( host.value + '/test/lgort?sap-client=300', options )
-      // return axios.post( 'http://192.168.1.101:8000/test/lgort?sap-client=300', {name: 'hola'}, options )
         .then(response => {
           almacenes.value = response.data;
           // response.headers response.config
@@ -276,7 +276,7 @@ export default {
         // hacer un GET para recuperar token y asi poder llamar a POST 
         const options = {
           headers: {'X-CSRF-Token': 'Fetch'} //, 'X-Requested-With': 'XMLHttpRequest'}
-          , withCredentials: true
+          // , withCredentials: true
           , auth: {
             username: 'tecsense',
             password: 'presmia.022'
@@ -289,17 +289,18 @@ export default {
           // console.log(response);
           token = response.headers['x-csrf-token'];
           console.log('token: ' + token);
+
           if (ceco.value) {
-            if (consumo.value === 'C') {
-              codMovimiento = 201;
-            } else {
+            if (consumo.value == 'A') {
               codMovimiento = 202;
-            }
-          } else if (ceco.value) {
-            if (consumo.value === 'C') {
-              codMovimiento = 261;
             } else {
+              codMovimiento = 201;
+            }
+          } else if (orden.value) {
+            if (consumo.value == 'A') {
               codMovimiento = 262;
+            } else {
+              codMovimiento = 261;
             }
           }
 
@@ -313,11 +314,19 @@ export default {
             "firma" : jpeg
           }; 
           const headPost = {
-            headers: { 'x-csrf-token': token } //, 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 
+              // 'X-CSRF-Token': 'Z2YzQXu3XMHeQUsgXidBcA=='
+              'X-CSRF-Token': token
+              // , crossdomain: true
+              // , 'Access-Control-Allow-Origin' : '*'
+              // , 'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS'
+              // 'Cookie': 'sap-usercontext=sap-client=300; SAP_SESSIONID_DES_300=iIPZ2b5zZw9TK2YWnv6DPSy8x8uGchHrgSwAFV0BEgM%3d'
+                // , 'sec-fetch-mode': 'no-cors'
+              } 
+              //, 'X-Requested-With': 'XMLHttpRequest' }
             // , withCredentials: true
             // , 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'  //'application/json'
             // , 'Access-Control-Allow-Origin': 'http://10.10.0.100:8080'
-            // , 'sec-fetch-mode': 'no-cors'
             // , auth: {
             //   username: 'tecsense',
             //   password: 'presmia.022'
