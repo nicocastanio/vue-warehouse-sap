@@ -126,7 +126,8 @@ export default {
     const signaturePad = ref(null);
     const divSignature = ref(null);
     const toast = useToast();
-    const host = ref("http://192.168.1.101:8000")
+    const host = ref("http://172.16.0.8:8000")
+    // const host = ref("http://192.168.1.101:8000")
     // const host = ref("http://10.10.0.102:8080")
     // const host = ref("https://sapdes:44300")
     const step = ref(); 
@@ -270,13 +271,14 @@ export default {
       if (!signaturePad.value.isEmpty()) {
 
         let token = ''; 
+        let cookie = ''; 
         var jpeg = signaturePad.value.save('image/jpeg');
         let codMovimiento = 0;
 
         // hacer un GET para recuperar token y asi poder llamar a POST 
         const options = {
           headers: {'X-CSRF-Token': 'Fetch'} //, 'X-Requested-With': 'XMLHttpRequest'}
-          // , withCredentials: true
+          , withCredentials: true
           , auth: {
             username: 'tecsense',
             password: 'presmia.022'
@@ -289,6 +291,9 @@ export default {
           // console.log(response);
           token = response.headers['x-csrf-token'];
           console.log('token: ' + token);
+          cookie = response.headers['set-cookie'];
+          console.log('cookie: ' + cookie);
+          console.log(response);
 
           if (ceco.value) {
             if (consumo.value == 'A') {
@@ -316,17 +321,19 @@ export default {
           const headPost = {
             headers: { 
               // 'X-CSRF-Token': 'Z2YzQXu3XMHeQUsgXidBcA=='
-              'X-CSRF-Token': token
+              'x-csrf-token': token
               // , crossdomain: true
               // , 'Access-Control-Allow-Origin' : '*'
               // , 'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS'
-              // 'Cookie': 'sap-usercontext=sap-client=300; SAP_SESSIONID_DES_300=iIPZ2b5zZw9TK2YWnv6DPSy8x8uGchHrgSwAFV0BEgM%3d'
+              // , 'Cookie': 'sap-usercontext=sap-client=300; SAP_SESSIONID_DES_300=ieVP5B4O1RsbpZtVgTtzjWl1ve65lhHrgYqNZIKTVOA=;'
                 // , 'sec-fetch-mode': 'no-cors'
-              } 
+            } 
               //, 'X-Requested-With': 'XMLHttpRequest' }
-            // , withCredentials: true
+            , withCredentials: true
             // , 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'  //'application/json'
             // , 'Access-Control-Allow-Origin': 'http://10.10.0.100:8080'
+
+            // NO es obligatorio, porque ya tenemos token
             // , auth: {
             //   username: 'tecsense',
             //   password: 'presmia.022'
@@ -393,7 +400,7 @@ export default {
           .then(response => {
             let material = response.data;
             // response.headers response.config
-            console.log(response);
+            // console.log(response);
             if (material.MATNR) {
               materiales.value.push({
                 id: material.MATNR, 
