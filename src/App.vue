@@ -127,22 +127,15 @@ export default {
     const divSignature = ref(null);
     const toast = useToast();
     const host = ref("http://172.16.0.8:8000")
-    // const host = ref("http://192.168.1.101:8000")
-    // const host = ref("http://10.10.0.102:8080")
-    // const host = ref("https://sapdes:44300")
     const step = ref(); 
 
 
     const fetchAllAlmacenes = () => {
-      // // completar lista almacenes 
+      // completar lista almacenes 
 
-      // funciona para hacer GET: 
       const options = {
         // headers: {'X-Requested-With': 'XMLHttpRequest'}
         // ,method: "POST"
-        // headers: {'X-CSRF-Token': 'Fetch', 'X-Requested-With': 'XMLHttpRequest'}
-        // , xsrfCookieName: 'csrftoken'
-        // , xsrfHeaderName: 'x-csrftoken'
         // , withCredentials: true
         // auth: {
         //   username: 'tecsense',
@@ -155,8 +148,6 @@ export default {
       return axios.get( host.value + '/test/lgort?sap-client=300', options )
         .then(response => {
           almacenes.value = response.data;
-          // response.headers response.config
-          // console.log(response.headers['x-csrf-token']);
         })
         .catch(function (error) {
           console.log(error); 
@@ -182,8 +173,7 @@ export default {
       // var wrapper = document.getElementById("signature-pad");
       var canvas = document.getElementById("canvas"); // wrapper.querySelector("canvas");
       var ratio =  Math.max(window.devicePixelRatio || 1, 1);
-      // // console.log(divSignature);
-      // console.log(canvas);
+      
       if (canvas) {
         canvas.width = canvas.offsetWidth * ratio;
         canvas.height = canvas.offsetHeight * ratio;
@@ -202,12 +192,6 @@ export default {
     }
     window.onresize = resizeCanvas;
 
-    // toast("I'm a toast!");
-    // toast("Default toast");
-    // toast.info("Info toast");
-    // toast.success("Success toast");
-    // toast.error("Error toast");
-    // toast.warning("Warning toast");
 
     function clear() {
       if (signaturePad.value) {
@@ -271,13 +255,13 @@ export default {
       if (!signaturePad.value.isEmpty()) {
 
         let token = ''; 
-        let cookie = ''; 
         var jpeg = signaturePad.value.save('image/jpeg');
         let codMovimiento = 0;
 
         // hacer un GET para recuperar token y asi poder llamar a POST 
+        // se envía 'Fetch' para que responda con el Token
         const options = {
-          headers: {'X-CSRF-Token': 'Fetch'} //, 'X-Requested-With': 'XMLHttpRequest'}
+          headers: {'X-CSRF-Token': 'Fetch'} 
           , withCredentials: true
           , auth: {
             username: 'tecsense',
@@ -288,11 +272,8 @@ export default {
         axios.get( host.value + '/test/hello?sap-client=300', options)
         .then(response => {
           // obtener token 
-          // console.log(response);
           token = response.headers['x-csrf-token'];
-          console.log('token: ' + token);
-          cookie = response.headers['set-cookie'];
-          console.log('cookie: ' + cookie);
+          // console.log('token: ' + token);
           console.log(response);
 
           if (ceco.value) {
@@ -320,23 +301,13 @@ export default {
           }; 
           const headPost = {
             headers: { 
-              // 'X-CSRF-Token': 'Z2YzQXu3XMHeQUsgXidBcA=='
               'x-csrf-token': token
-              // , crossdomain: true
-              // , 'Access-Control-Allow-Origin' : '*'
-              // , 'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,PATCH,OPTIONS'
-              // , 'Cookie': 'sap-usercontext=sap-client=300; SAP_SESSIONID_DES_300=ieVP5B4O1RsbpZtVgTtzjWl1ve65lhHrgYqNZIKTVOA=;'
-                // , 'sec-fetch-mode': 'no-cors'
             } 
-              //, 'X-Requested-With': 'XMLHttpRequest' }
             , withCredentials: true
-            // , 'content-type': 'application/x-www-form-urlencoded; charset=UTF-8'  //'application/json'
-            // , 'Access-Control-Allow-Origin': 'http://10.10.0.100:8080'
-
-            // NO es obligatorio, porque ya tenemos token
+            // NO es obligatorio user y pass, porque ya tenemos token
             // , auth: {
-            //   username: 'tecsense',
-            //   password: 'presmia.022'
+            //   username: '...',
+            //   password: '...'
             // }
           };
 
@@ -399,8 +370,7 @@ export default {
         axios.get( host.value + '/test/matnr?sap-client=300', options )
           .then(response => {
             let material = response.data;
-            // response.headers response.config
-            // console.log(response);
+
             if (material.MATNR) {
               materiales.value.push({
                 id: material.MATNR, 
