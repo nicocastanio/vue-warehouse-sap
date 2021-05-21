@@ -30,14 +30,13 @@ npm run lint
 
 
 ## SAP side (not in this repository): 
-get lgort, get materials, create movements. 
+APIs implemented: get lgort, get materials, post material movements. 
 
 
 Steps: 
 * create a service (SICF)
 * create a class handler and setup in the service created. this class works like a router. 
 * create a class resource to implement each API. 
-
-
-the Resource class must return CORS headers in response. 
+* set system parameter icf/cors_enabled to 1.
+* configure CORS whitelist in transaction UCONCOCKPIT 
 
