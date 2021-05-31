@@ -138,8 +138,8 @@ export default {
         // ,method: "POST"
         // , withCredentials: true
         // auth: {
-        //   username: 'tecsense',
-        //   password: 'presmia.022'
+        //   username: '',
+        //   password: ''
         // }
         // params: {
         //   id : '1020'
@@ -270,11 +270,11 @@ export default {
         };
       
         axios.get( host.value + '/test/hello?sap-client=300', options)
-        .then(response => {
+        .then(getResponse => {
           // obtener token 
-          token = response.headers['x-csrf-token'];
+          token = getResponse.headers['x-csrf-token'];
           // console.log('token: ' + token);
-          console.log(response);
+          console.log(getResponse); // response del GET 
 
           if (ceco.value) {
             if (consumo.value == 'A') {
@@ -312,10 +312,18 @@ export default {
           };
 
           axios.post( host.value + '/test/hello?sap-client=300', data, headPost )
-            .then(response => {
-              console.log(response); 
-              step.value = 1; //'visible';      
-              toast.success("Movimiento creado");  
+            .then(postResponse => {
+              console.log("--- Post Response ---"); 
+              console.log(postResponse); 
+              console.log(postResponse.data.MESSAGE); 
+
+              if (postResponse.data.TYPE == 'E') {
+                toast.error(postResponse.data.MESSAGE);
+              } else {
+                step.value = 1; // vuelve a pantalla inicial       
+                toast.success("Movimiento creado: "+postResponse.data.MBLNR);  
+              }
+              
 
             })
             .catch(function (error) {
