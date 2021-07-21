@@ -16,7 +16,7 @@ module.exports = {
     config
     .plugin('html')
     .tap(args => {
-      args[0].title = 'Consumos y Devoluciones'
+      args[0].title = 'Gestión Stock'
       return args
     })
   }

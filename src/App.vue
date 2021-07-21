@@ -2,18 +2,29 @@
   <div >
     <nav class="navbar navbar-light bg-light">
       <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">Consumos</span>
-        <button v-if="step === 3" type="submit" class="btn btn-success" @click.prevent="createMovement">Grabar</button>
+        <span class="navbar-brand mb-0 h1">Gesti&oacute;n Stock</span>{{ sapUser }}
+        <button v-if="step > 0" type="submit" class="btn btn-primary" @click.prevent="logout">Salir</button>
       </div>
     </nav>
 
     <div class="container ">
+
+        <div v-if="step === 0">
+          <label for="user" class="form-label">Usuario:</label>
+          <input  v-model="sapUser" type="text" class="form-control" 
+                  id="user" >
+          <label for="password" class="form-label">Contraseña:</label>
+          <input  v-model="sapPass" type="password" class="form-control" 
+                  id="password" >
+          <br/>
+          <button class="btn btn-primary btn-rounded prevBtn float-left" type="button" @click="login">Ingresar</button>
+        </div> 
         
         <div v-if="step === 1" class="row setup-content"   >
           <div class="col-xs-6 col-md-offset-3">
             <div class="mb-3">
               <label for="almacen" class="form-group md-form">Almacen: {{almacen}}</label>
-              <select id="inputState" class="form-control validate" v-model="almacen">
+              <select id="inputState" class="form-control validate" v-model="almacen" data-live-search="true">
                 <option value="0" selected>Choose...</option>
                 <option v-for="alma in almacenes" :key="alma.LGORT" :value="alma.LGORT">
                   {{alma.LGORT}} - {{alma.LGOBE}}
@@ -26,8 +37,14 @@
               <input v-model="destinatario" type="text" class="form-control form-control-sm" id="destinatario" aria-describedby="destinatarioHelp">
             </div>
             <div class="mb-3">
-              <label for="ceco" class="form-label">CeCo</label>
-              <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp">
+              <label for="ceco" class="form-label">CeCo: {{ceco}}</label>
+              <select id="inputState" class="form-control validate" v-model="ceco">
+                <option value="0" selected>Choose...</option>
+                <option v-for="cecosto in cecos" :key="cecosto.KOSTL" :value="cecosto.KOSTL">
+                  {{cecosto.KOSTL}} - {{cecosto.KTEXT}}
+                </option>
+              </select>
+              <!-- <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp"> -->
             </div>
             <div class="mb-3">
               <label for="orden" class="form-label">Orden</label>
@@ -89,7 +106,7 @@
 
     </div>
 
-    <div class="footer fixed-bottom p-1 bg-light">
+    <div class="footer fixed-bottom p-1 bg-light" v-if="step > 0">
       <div class="d-flex w-100 justify-content-between">
         <button v-if="step === 1" class="btn btn-primary btn-rounded prevBtn float-left" disabled type="button" >Volver</button>
         <button v-if="step > 1" class="btn btn-primary btn-rounded prevBtn float-left" type="button" @click="prevStep" >Volver</button>
@@ -118,6 +135,7 @@ export default {
     const almacenes = ref([]); 
     const destinatario = ref(""); 
     const ceco = ref(""); 
+    const cecos = ref([]); 
     const orden = ref(""); 
     const consumo = ref(""); 
     const materiales = ref([]);
@@ -126,8 +144,11 @@ export default {
     const signaturePad = ref(null);
     const divSignature = ref(null);
     const toast = useToast();
-    const host = ref("http://172.16.0.8:8000")
+    const host = ref("http://172.16.0.8:8000"); 
+    const client = ref("300"); 
     const step = ref(); 
+    const sapUser = ref();
+    const sapPass = ref();
 
 
     const fetchAllAlmacenes = () => {
@@ -145,7 +166,7 @@ export default {
         //   id : '1020'
         // }
       };
-      return axios.get( host.value + '/test/lgort?sap-client=300', options )
+      return axios.get( host.value + '/test/lgort?sap-client=' + client.value, options )
         .then(response => {
           almacenes.value = response.data;
         })
@@ -153,6 +174,60 @@ export default {
           console.log(error); 
         });
 
+    }
+
+
+    const fetchAllCecos = () => {
+      // completar lista CeCos
+      const options = { };
+      return axios.get( host.value + '/test/kostl?sap-client=' + client.value, options )
+        .then(response => {
+          cecos.value = response.data;
+        })
+        .catch(function (error) {
+          console.log(error); 
+        });
+    }
+
+    function login() {
+      // validar que completen algo
+
+      // deberia validar que user y pass sean correctos antes de continuar. 
+
+      // en lugar de usar esta API podriamos llamar al get para obtener Token y validar si obtuvo uno. 
+      const options = {
+        params: {
+          user : sapUser.value,
+          pass : sapPass.value
+        }
+      };
+      axios.get( host.value + '/test/user?sap-client=' + client.value, options )
+        .then(response => {
+          let usuario = response.data;
+
+          if (usuario.TYPE==='S') {
+            localStorage.sapUser = sapUser.value; 
+            localStorage.sapPass = sapPass.value; 
+            step.value = 1; 
+
+          } else {
+            toast.error(usuario.MESSAGE);
+          }
+           
+        })
+        .catch(function (error) {
+          console.log(error); 
+          toast.error("error al validar usuario");
+        }); 
+      
+    }
+
+    function logout() {
+      localStorage.removeItem('sapUser');
+      localStorage.removeItem('sapPass');
+      sapUser.value = '';
+      sapPass.value = '';
+      step.value = 0; 
     }
 
     function nextStep() {
@@ -163,6 +238,7 @@ export default {
       }
 
     }
+
     function prevStep() {
       if (step.value > 1) {
        step.value -= 1; 
@@ -190,8 +266,7 @@ export default {
 
       clear();
     }
-    window.onresize = resizeCanvas;
-
+    window.onresize = resizeCanvas();
 
     function clear() {
       if (signaturePad.value) {
@@ -264,12 +339,12 @@ export default {
           headers: {'X-CSRF-Token': 'Fetch'} 
           , withCredentials: true
           , auth: {
-            username: 'tecsense',
-            password: 'presmia.022'
+            username: sapUser.value,
+            password: sapPass.value
           }
         };
       
-        axios.get( host.value + '/test/hello?sap-client=300', options)
+        axios.get( host.value + '/test/mover?sap-client=' + client.value, options)
         .then(getResponse => {
           // obtener token 
           token = getResponse.headers['x-csrf-token'];
@@ -311,7 +386,7 @@ export default {
             // }
           };
 
-          axios.post( host.value + '/test/hello?sap-client=300', data, headPost )
+          axios.post( host.value + '/test/mover?sap-client=' + client.value, data, headPost )
             .then(postResponse => {
               console.log("--- Post Response ---"); 
               console.log(postResponse); 
@@ -375,7 +450,7 @@ export default {
             matnr : newMat.value
           }
         };
-        axios.get( host.value + '/test/matnr?sap-client=300', options )
+        axios.get( host.value + '/test/matnr?sap-client=' + client.value, options )
           .then(response => {
             let material = response.data;
 
@@ -410,14 +485,34 @@ export default {
       almacen, almacenes, destinatario, ceco, orden, consumo, createMovement,
       materiales, newMat, addNewMat, removeMat, nuevoMat,
       clear, signaturePad, savePng, cancel, divSignature, toast,
-      fetchAllAlmacenes, step, nextStep, prevStep
+      fetchAllAlmacenes, step, nextStep, prevStep, fetchAllCecos, cecos,
+      sapUser, sapPass, login, logout
     }
   },
    
   created() {
     this.fetchAllAlmacenes();
-    this.step = 1;
+    this.fetchAllCecos();
+    this.step = 0; // login
+    if (localStorage.sapUser) { 
+      this.sapUser = localStorage.sapUser; 
+    }
+    if (localStorage.sapPass) { 
+      this.sapPass = localStorage.sapPass; 
+    }
+    if (this.sapUser && this.sapPass) {
+      this.step = 1;
+    } 
   }
+
+  /*
+  localStorage.getItem('user');
+  localStorage.setItem('user', ...); 
+  localStorage.removeItem('user');
+
+  JSON.parse(localStorage.getItem("checked"))
+  localStorage.setItem("checked", JSON.stringify(newValue)); 
+  */
   
 }
 </script>
