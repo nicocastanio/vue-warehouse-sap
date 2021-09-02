@@ -23,32 +23,57 @@
         <div v-if="step === 1" class="row setup-content"   >
           <div class="col-xs-6 col-md-offset-3">
             <div class="mb-3">
-              <label for="almacen" class="form-group md-form">Almacen: {{almacen}}</label>
-              <select id="inputState" class="form-control validate" v-model="almacen" data-live-search="true">
-                <option value="0" selected>Choose...</option>
-                <option v-for="alma in almacenes" :key="alma.LGORT" :value="alma.LGORT">
-                  {{alma.LGORT}} - {{alma.LGOBE}}
-                </option>
-              </select>
-              <!-- <input v-model="almacen" type="text" class="form-control form-control-sm" id="almacen" aria-describedby="almacenHelp"> -->
+              <div class="row g-3 align-items-center">
+                <div class="col-4">
+                  <label for="almacen" class="form-group md-form">Almacen: </label> <!-- {{almacen}} -->
+                </div>
+                <div class="col-auto">
+                  <select id="inputState" class="form-control validate" v-model="almacen" data-live-search="true">
+                    <option value="0" selected>Choose...</option>
+                    <option v-for="alma in almacenes" :key="alma.LGORT" :value="alma.LGORT">
+                      {{alma.LGORT}} - {{alma.LGOBE}}
+                    </option>
+                  </select>
+                  <!-- <v-select label="LGOBE" :options="almacenes"></v-select> -->
+                </div>
+                <!-- <input v-model="almacen" type="text" class="form-control form-control-sm" id="almacen" aria-describedby="almacenHelp"> -->
+              </div>
+              </div>
+            <div class="mb-3">
+              <div class="row g-3 align-items-center">
+                <div class="col-4">
+                  <label for="destinatario" class="form-label">Destinatario</label>
+                </div>
+                <div class="col-auto">
+                  <input v-model="destinatario" type="text" class="form-control" id="destinatario" aria-describedby="destinatarioHelp">
+                </div>
+              </div>
             </div>
             <div class="mb-3">
-              <label for="destinatario" class="form-label">Destinatario</label>
-              <input v-model="destinatario" type="text" class="form-control form-control-sm" id="destinatario" aria-describedby="destinatarioHelp">
+              <div class="row g-3 align-items-center">
+                <div class="col-4">
+                  <label for="ceco" class="form-label">CeCo: </label>  <!-- {{ceco}} -->
+                </div>
+                <div class="col-auto">
+                  <select id="inputState" class="form-control validate" v-model="ceco">
+                    <option value="0" selected>Choose...</option>
+                    <option v-for="cecosto in cecos" :key="cecosto.KOSTL" :value="cecosto.KOSTL">
+                      {{cecosto.KOSTL}} - {{cecosto.KTEXT}}
+                    </option>
+                  </select>
+                </div>
+                <!-- <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp"> -->
+              </div>
             </div>
             <div class="mb-3">
-              <label for="ceco" class="form-label">CeCo: {{ceco}}</label>
-              <select id="inputState" class="form-control validate" v-model="ceco">
-                <option value="0" selected>Choose...</option>
-                <option v-for="cecosto in cecos" :key="cecosto.KOSTL" :value="cecosto.KOSTL">
-                  {{cecosto.KOSTL}} - {{cecosto.KTEXT}}
-                </option>
-              </select>
-              <!-- <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp"> -->
-            </div>
-            <div class="mb-3">
-              <label for="orden" class="form-label">Orden</label>
-              <input v-model="orden" type="text" class="form-control form-control-sm" id="orden" aria-describedby="ordenHelp">
+              <div class="row g-3 align-items-center">
+                <div class="col-4">
+                  <label for="orden" class="form-label">Orden</label>
+                </div>
+                <div class="col-auto">
+                  <input v-model="orden" type="text" class="form-control" id="orden" aria-describedby="ordenHelp">
+                </div>
+              </div>
             </div>
             <div class="mb-3">
               <div class="form-check form-check-inline">
@@ -69,7 +94,7 @@
         <div v-if="step === 2" class="" >
           <!-- <Lista-mat /> -->
           <label for="material" class="form-label">Scan:</label>
-          <input  v-model="newMat" autofocus type="text" class="form-control" 
+          <input  v-model="newMat" type="text" class="form-control" 
                   ref="nuevoMat"
                   id="material" @keyup.enter.prevent="addNewMat">
           <ul class="list-group mt-2 mb-5">
@@ -77,7 +102,7 @@
                 v-for="(mat, index) in materiales" :key="mat.cod">
               <div class="d-flex w-100 justify-content-between">
                 {{ mat.id }} - {{ mat.name }}
-                <span class="badge bg-primary rounded-pill">{{ mat.cant }} {{ mat.um }}</span>
+                <span class="badge bg-primary rounded-pill" @click="stepCant(index)">{{ mat.cant }} {{ mat.um }}</span>
               </div>
                 
               <i @click="removeMat(index)" class="far fa-trash-alt"></i>
@@ -104,12 +129,21 @@
 
         </div>
 
+        <!-- modificar Cantidad -->
+        <div v-if="step === 4" class="" >
+          <h4>Modificar Cantidad </h4>
+          <label for="cantidad" class="form-label">{{ selectedMat.value.name }}</label>
+          <input  v-model="selectedMat.value.cant" type="text" class="form-control" 
+                  id="cantidad" >
+          <button class="btn btn-primary btn-rounded" type="button" @click.prevent="updateCantMat">Aceptar</button>
+        </div>
+
     </div>
 
     <div class="footer fixed-bottom p-1 bg-light" v-if="step > 0">
       <div class="d-flex w-100 justify-content-between">
         <button v-if="step === 1" class="btn btn-primary btn-rounded prevBtn float-left" disabled type="button" >Volver</button>
-        <button v-if="step > 1" class="btn btn-primary btn-rounded prevBtn float-left" type="button" @click="prevStep" >Volver</button>
+        <button v-if="step > 1 && step <= 3" class="btn btn-primary btn-rounded prevBtn float-left" type="button" @click="prevStep" >Volver</button>
         <button v-if="step < 3" class="btn btn-primary btn-rounded nextBtn float-right" type="button" @click="nextStep">Siguiente</button>
         <button v-if="step === 3" class="btn btn-success btn-rounded nextBtn float-right" type="button" @click="createMovement">Grabar</button>
       </div>
@@ -123,12 +157,13 @@ import { ref } from 'vue';
 import VueSignature from 'vue-signature';
 import { useToast } from "vue-toastification";
 import axios from 'axios';
+// import vSelect from 'vue-select';
 
 
 export default {
   name: 'App',
   // components: { Campos, ListaMat },
-  components: { VueSignature },
+  components: { VueSignature  },
 
   setup() {
     const almacen = ref(); 
@@ -141,30 +176,27 @@ export default {
     const materiales = ref([]);
     const newMat = ref('');
     const nuevoMat = ref(null);
+    const selectedMat = {};
     const signaturePad = ref(null);
     const divSignature = ref(null);
     const toast = useToast();
-    const host = ref("http://172.16.0.8:8000"); 
+    const host = ref("http://172.16.0.8:8000");  // des 300
+    // const host = ref("http://172.16.0.9:8000");  // qas 
+    // const host = ref("http://172.16.0.10:8000");  // prd 
     const client = ref("300"); 
     const step = ref(); 
     const sapUser = ref();
     const sapPass = ref();
+    // const name = ref();
 
 
     const fetchAllAlmacenes = () => {
       // completar lista almacenes 
-
       const options = {
-        // headers: {'X-Requested-With': 'XMLHttpRequest'}
-        // ,method: "POST"
-        // , withCredentials: true
-        // auth: {
-        //   username: '',
-        //   password: ''
-        // }
-        // params: {
-        //   id : '1020'
-        // }
+        params: {
+          'sap-user' : sapUser.value,
+          'sap-password' : sapPass.value
+        }
       };
       return axios.get( host.value + '/test/lgort?sap-client=' + client.value, options )
         .then(response => {
@@ -179,7 +211,12 @@ export default {
 
     const fetchAllCecos = () => {
       // completar lista CeCos
-      const options = { };
+      const options = { 
+        params: {
+          'sap-user' : sapUser.value,
+          'sap-password' : sapPass.value
+        }
+      };
       return axios.get( host.value + '/test/kostl?sap-client=' + client.value, options )
         .then(response => {
           cecos.value = response.data;
@@ -197,10 +234,12 @@ export default {
       // en lugar de usar esta API podriamos llamar al get para obtener Token y validar si obtuvo uno. 
       const options = {
         params: {
-          user : sapUser.value,
-          pass : sapPass.value
+          'sap-user' : sapUser.value,
+          'sap-password' : sapPass.value
         }
       };
+      // let url = host.value + '/test/user?sap-client=' + client.value + '&sap-user=' + sapUser.value + '&sap-password=' + sapPass.value
+      // axios.get( url , options )
       axios.get( host.value + '/test/user?sap-client=' + client.value, options )
         .then(response => {
           let usuario = response.data;
@@ -209,6 +248,8 @@ export default {
             localStorage.sapUser = sapUser.value; 
             localStorage.sapPass = sapPass.value; 
             step.value = 1; 
+            this.fetchAllAlmacenes();
+            this.fetchAllCecos();
 
           } else {
             toast.error(usuario.MESSAGE);
@@ -234,9 +275,8 @@ export default {
       if (step.value < 3) {
         if ( validateForm() ) {
           step.value += 1; 
-        }
+        } 
       }
-
     }
 
     function prevStep() {
@@ -315,6 +355,7 @@ export default {
       } else if (step.value === 2) {
         if (materiales.value.length == 0) {
           toast.error("Completar Materiales");
+          nuevoMat.value.focus();
         } else {
           isValid = true;
         }
@@ -341,6 +382,10 @@ export default {
           , auth: {
             username: sapUser.value,
             password: sapPass.value
+          }
+          ,params: {
+            'sap-user' : sapUser.value,
+            'sap-password' : sapPass.value
           }
         };
       
@@ -379,6 +424,10 @@ export default {
               'x-csrf-token': token
             } 
             , withCredentials: true
+            , params: {
+              'sap-user' : sapUser.value,
+              'sap-password' : sapPass.value
+            }
             // NO es obligatorio user y pass, porque ya tenemos token
             // , auth: {
             //   username: '...',
@@ -447,7 +496,9 @@ export default {
 
         const options = {
           params: {
-            matnr : newMat.value
+            matnr : newMat.value,
+            'sap-user' : sapUser.value,
+            'sap-password' : sapPass.value
           }
         };
         axios.get( host.value + '/test/matnr?sap-client=' + client.value, options )
@@ -477,13 +528,39 @@ export default {
 
     function removeMat(index) {
       materiales.value.splice(index, 1);
+      // newMat.value.focus();
+      // nuevoMat.value.focus();
+    }
+
+    function stepCant(index) {
+      step.value = 4; 
+      selectedMat.value = materiales.value[index];
+      // name = selectedMat.name ; 
+      // console.log(materiales.value[index]); 
+      // console.log(selectedMat); 
+      // console.log(materiales.value[index].cant ); 
+      // console.log(selectedMat.value.name ); 
+    }
+    function updateCantMat() {
+      // buscar indice del material a modificar 
+      const itemIndex = materiales.value.findIndex(item => item.id === selectedMat.value.id);
+
+      if (itemIndex >= 0) {
+        materiales.value[itemIndex].cant = parseInt(selectedMat.value.cant); 
+      } 
+
+      step.value = 2; 
+    }
+
+    if ( step.value === 2 )
+    {
+      newMat.value.focus();
       nuevoMat.value.focus();
-      
     }
 
     return { 
       almacen, almacenes, destinatario, ceco, orden, consumo, createMovement,
-      materiales, newMat, addNewMat, removeMat, nuevoMat,
+      materiales, newMat, addNewMat, removeMat, stepCant, updateCantMat, nuevoMat, selectedMat,
       clear, signaturePad, savePng, cancel, divSignature, toast,
       fetchAllAlmacenes, step, nextStep, prevStep, fetchAllCecos, cecos,
       sapUser, sapPass, login, logout
@@ -491,8 +568,6 @@ export default {
   },
    
   created() {
-    this.fetchAllAlmacenes();
-    this.fetchAllCecos();
     this.step = 0; // login
     if (localStorage.sapUser) { 
       this.sapUser = localStorage.sapUser; 
@@ -503,6 +578,9 @@ export default {
     if (this.sapUser && this.sapPass) {
       this.step = 1;
     } 
+    this.fetchAllAlmacenes();
+    this.fetchAllCecos();
+
   }
 
   /*
