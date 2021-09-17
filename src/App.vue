@@ -55,12 +55,13 @@
                   <label for="ceco" class="form-label">CeCo: </label>  <!-- {{ceco}} -->
                 </div>
                 <div class="col-auto">
-                  <select id="inputState" class="form-control validate" v-model="ceco">
+                  <input v-model="ceco" type="text" class="form-control" id="ceco" aria-describedby="cecoHelp">
+                  <!-- <select id="inputState" class="form-control validate" v-model="ceco">
                     <option value="0" selected>Choose...</option>
                     <option v-for="cecosto in cecos" :key="cecosto.KOSTL" :value="cecosto.KOSTL">
                       {{cecosto.KOSTL}} - {{cecosto.KTEXT}}
                     </option>
-                  </select>
+                  </select> -->
                 </div>
                 <!-- <input v-model="ceco" type="text" class="form-control form-control-sm" id="ceco" aria-describedby="cecoHelp"> -->
               </div>
@@ -180,8 +181,8 @@ export default {
     const signaturePad = ref(null);
     const divSignature = ref(null);
     const toast = useToast();
-    const host = ref("http://172.16.0.8:8000");  // des 300
-    // const host = ref("http://172.16.0.9:8000");  // qas 
+    // const host = ref("http://172.16.0.8:8000");  // des 300
+    const host = ref("http://172.16.0.9:8000");  // qas 
     // const host = ref("http://172.16.0.10:8000");  // prd 
     const client = ref("300"); 
     const step = ref(); 
@@ -224,6 +225,51 @@ export default {
         .catch(function (error) {
           console.log(error); 
         });
+    }
+
+    function fetchOrden() {
+      const options = {
+        params: {
+          aufnr : orden.value,
+          'sap-user' : sapUser.value,
+          'sap-password' : sapPass.value
+        }
+      };
+
+      axios.get( host.value + '/test/aufnr?sap-client=' + client.value, options )
+        .then(response => {
+          let matOrden = response.data; 
+
+          matOrden.forEach(producto => {
+            const prodIndex = materiales.value.findIndex(item => item.id === producto.MATNR);
+            if (prodIndex >= 0) {
+              materiales.value[prodIndex].cant += producto.ERFMG; 
+            } else {
+              materiales.value.push({
+                id: producto.MATNR, 
+                name: producto.MAKTX, 
+                cant: producto.ERFMG,
+                um: producto.ERFME
+              });
+            }
+          });
+
+          // let materiales = response.data;
+          // if (material.MATNR) {
+          //   materiales.value.push({
+          //     id: material.MATNR, 
+          //     name: material.MAKTX, 
+          //     cant: 1,
+          //     um: material.MEINS
+          //   });
+          // } else {
+          //   toast.error("Material no encontrado");
+          // }
+        })
+        .catch(function (error) {
+          console.log(error); 
+          toast.error("error al buscar material");
+        }); 
     }
 
     function login() {
@@ -349,7 +395,20 @@ export default {
           // error campos incompletos 
           toast.error("Completar campos");
         } else {
-          isValid = true;
+          materiales.value = []; 
+          if (ceco.value) {
+            // si ingresaron Ceco: validar que ceco ingresado corresponda a uno de la lista cecos 
+            const cecoIndex = cecos.value.findIndex(item => item.KOSTL === ceco.value);
+            if (cecoIndex >= 0) {
+              isValid = true;
+            } else {
+              toast.error("CeCo no existe");
+            }
+          } else {
+            fetchOrden() ;
+            // validar? 
+            isValid = true;
+          }
         }
 
       } else if (step.value === 2) {
