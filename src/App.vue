@@ -136,6 +136,12 @@
           <label for="cantidad" class="form-label">{{ selectedMat.value.name }}</label>
           <input  v-model="selectedMat.value.cant" type="text" class="form-control" 
                   id="cantidad" >
+          
+          <div v-if="selectedMat.value.requiere_lote == 'X'">
+            <label for="lote" class="form-label">Lote</label>
+            <input  v-model="selectedMat.value.lote" type="text" class="form-control" id="lote" >
+          </div>
+
           <button class="btn btn-primary btn-rounded" type="button" @click.prevent="updateCantMat">Aceptar</button>
         </div>
 
@@ -182,8 +188,8 @@ export default {
     const divSignature = ref(null);
     const toast = useToast();
     // const host = ref("http://172.16.0.8:8000");  // des 300
-    const host = ref("http://172.16.0.9:8000");  // qas 
-    // const host = ref("http://172.16.0.10:8000");  // prd 
+    // const host = ref("http://172.16.0.9:8000");  // qas 
+    const host = ref("http://172.16.0.10:8000");  // prd 
     const client = ref("300"); 
     const step = ref(); 
     const sapUser = ref();
@@ -542,7 +548,7 @@ export default {
     }
 
     function addNewMat() {
-      // llamar a API para obtener 
+      // llamar a API para obtener datos del material 
 
       // si el material ya existe en la lista => sumamos 1 
       const itemIndex = materiales.value.findIndex(item => item.id === newMat.value);
@@ -569,7 +575,9 @@ export default {
                 id: material.MATNR, 
                 name: material.MAKTX, 
                 cant: 1,
-                um: material.MEINS
+                um: material.MEINS,
+                requiere_lote: material.XCHPF,
+                lote: ''
               });
             } else {
               toast.error("Material no encontrado");
@@ -606,6 +614,7 @@ export default {
 
       if (itemIndex >= 0) {
         materiales.value[itemIndex].cant = parseInt(selectedMat.value.cant); 
+        materiales.value[itemIndex].lote = selectedMat.value.lote; 
       } 
 
       step.value = 2; 
